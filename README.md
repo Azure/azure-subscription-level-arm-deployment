@@ -1,11 +1,13 @@
 ---
 page_type: sample
 languages:
-- csharp
+- json
+- yml
 products:
-- dotnet
-description: "Add 150 character max description"
-urlFragment: "update-this-to-unique-url-stub"
+- Azure Resource Manager (ARM)
+- Azure DevOps
+description: "A sample subscription level deployment of two vnets in separate regions and peering."
+urlFragment: ""
 ---
 
 # Official Microsoft Sample
@@ -18,36 +20,22 @@ Guidance on onboarding samples to docs.microsoft.com/samples: https://review.doc
 Taxonomies for products and languages: https://review.docs.microsoft.com/new-hope/information-architecture/metadata/taxonomies?branch=master
 -->
 
-Give a short description for your sample here. What does it do and why is it important?
+A sample subscription level deployment of two vnets in separate regions. The sample creates resource groups, an example policy definition and assignment as well as the nested deployments for each vnet. The sample includes an example DevOps Pipeline to peer the two vnets and demonstrate marshalling variables from the output of the first deployment to parameters of the second.
 
 ## Contents
 
-Outline the file contents of the repository. It helps users navigate the codebase, build configuration and any related assets.
-
-| File/folder       | Description                                |
-|-------------------|--------------------------------------------|
-| `src`             | Sample source code.                        |
-| `.gitignore`      | Define what to ignore at commit time.      |
-| `CHANGELOG.md`    | List of changes to the sample.             |
-| `CONTRIBUTING.md` | Guidelines for contributing to the sample. |
-| `README.md`       | This README file.                          |
-| `LICENSE`         | The license for the sample.                |
-
-## Prerequisites
-
-Outline the required components and tools that a user might need to have on their machine in order to run the sample. This can be anything from frameworks, SDKs, OS versions or IDE releases.
-
-## Setup
-
-Explain how to prepare the sample once the user clones or downloads the repository. The section should outline every step necessary to install dependencies and set up any settings (for example, API keys and output folders).
-
-## Running the sample
-
-Outline step-by-step instructions to execute the sample and see its output. Include steps for executing the sample from the IDE, starting specific services in the Azure portal or anything related to the overall launch of the code.
-
-## Key concepts
-
-Provide users with more context on the tools and services used in the sample. Explain some of the code that is being used and how services interact with each other.
+| File/folder                        | Description                                |
+|------------------------------------|--------------------------------------------|
+| `sample\`                          | All sample files are in this folder.       |
+| `sample\az-deploy.json`            | ARM Template deployment file.              |
+| `sample\az-deploy.parameters.json` | ARM Template parameters file.              |
+| `sample\az-peer-vnets.json`        | ARM Template to peer vnets.                |
+| `sample\azure-pipelines.yml`       | Example DevOps piplines file.              |
+| `.gitignore`                       | Define what to ignore at commit time.      |
+| `CHANGELOG.md`                     | List of changes to the sample.             |
+| `CONTRIBUTING.md`                  | Guidelines for contributing to the sample. |
+| `README.md`                        | This README file.                          |
+| `LICENSE`                          | The license for the sample.                |
 
 ## Contributing
 

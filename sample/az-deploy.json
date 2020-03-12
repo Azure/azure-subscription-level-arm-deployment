@@ -1,0 +1,225 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/subscriptionDeploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "rgNameA": {
+      "type": "string"
+    },
+    "rgNameB": {
+      "type": "string"
+    },    
+    "rgLocationA": {
+      "type": "string"
+    },
+    "rgLocationB": {
+      "type": "string"
+    }    
+  },
+  "variables": {},
+  "resources": [
+    {
+      "type": "Microsoft.Resources/resourceGroups",
+      "apiVersion": "2018-05-01",
+      "name": "[parameters('rgNameA')]",
+      "location": "[parameters('rgLocationA')]",
+      "properties": {}
+    },
+    {
+      "type": "Microsoft.Resources/resourceGroups",
+      "apiVersion": "2018-05-01",
+      "name": "[parameters('rgNameB')]",
+      "location": "[parameters('rgLocationB')]",
+      "properties": {}
+    },
+    {
+      "name": "nestDepPrimary",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2018-05-01",
+      "dependsOn": [
+        "[concat('Microsoft.Resources/resourceGroups/', parameters('rgNameA'))]"
+      ],
+      "resourceGroup": "[parameters('rgNameA')]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "parameters": {
+            "rgName": {
+              "type": "string"
+            },    
+            "rgLocation": {
+              "type": "string"
+            } 
+          },
+          "variables": {
+            "vnetName": "[concat(parameters('rgName'), '-vnet')]"
+          },          
+          "resources": [
+            {
+              "type": "Microsoft.Network/virtualNetworks",
+              "apiVersion": "2019-04-01",
+              "name": "[variables('vnetName')]",
+              "location": "[parameters('rgLocation')]",
+              "properties": {
+                "addressSpace": {
+                  "addressPrefixes": [
+                    "10.11.0.0/16"
+                  ]
+                },
+                "subnets": [
+                  {
+                    "name": "defaultSubnet",
+                    "properties": {
+                      "addressPrefix": "10.11.1.0/24" 
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "outputs": {
+            "vnetId": {
+              "type":  "string",
+              "value": "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]"
+            } 
+          }
+        },
+        "parameters": {
+          "rgName": {
+            "value": "[parameters('rgNameA')]"
+          },    
+          "rgLocation": {
+            "value": "[parameters('rgLocationA')]"
+          } 
+        }
+      }
+    },
+    {
+      "name": "nestDepSecondary",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2018-05-01",
+      "dependsOn": [
+        "[concat('Microsoft.Resources/resourceGroups/', parameters('rgNameB'))]"
+      ],
+      "resourceGroup": "[parameters('rgNameB')]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "parameters": {
+            "rgName": {
+              "type": "string"
+            },    
+            "rgLocation": {
+              "type": "string"
+            } 
+          },
+          "variables": {
+            "vnetName": "[concat(parameters('rgName'), '-vnet')]"
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Network/virtualNetworks",
+              "apiVersion": "2019-04-01",
+              "name": "[variables('vnetName')]",
+              "location": "[parameters('rgLocation')]",
+              "properties": {
+                "addressSpace": {
+                  "addressPrefixes": [
+                    "10.12.0.0/16"
+                  ]
+                },
+                "subnets": [
+                  {
+                    "name": "defaultSubnet",
+                    "properties": {
+                      "addressPrefix": "10.12.1.0/24" 
+                    }
+                  }
+                ]
+              }
+            }
+          ],
+          "outputs": {
+            "vnetId": {
+              "type":  "string",
+              "value": "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]"
+            } 
+          }
+        },
+        "parameters": {
+          "rgName": {
+            "value": "[parameters('rgNameB')]"
+          },    
+          "rgLocation": {
+            "value": "[parameters('rgLocationB')]"
+          } 
+        }
+      }
+    },    
+    {
+      "name": "cstmpoldeftags",
+      "type": "Microsoft.Authorization/policyDefinitions",
+      "apiVersion": "2019-06-01",
+      "properties": {
+        "policyType": "Custom",
+        "mode": "All",
+        "displayName": "My New Custom Policy (tags)",
+        "description": "A custom policy created using ARM deployment (tags)",
+        "policyRule": {
+          "if": {
+            "allOf": [{
+              "not": {
+                  "field": "tags",
+                  "containsKey": "ApplicationOwner"
+              }
+            }]
+          },
+          "then": {
+            "effect": "audit"
+          }
+        },
+        "metadata": {},
+        "parameters": {}
+      }
+    },
+    {
+      "type": "Microsoft.Authorization/policyAssignments",
+      "apiVersion": "2018-03-01",
+      "dependsOn": [
+        "Microsoft.Authorization/policyDefinitions/cstmpoldeftags"
+      ],
+      "name": "AuditTags-AppOwner",
+      "properties": {
+        "scope": "[subscription().id]",
+        "policyDefinitionId": "[resourceId('Microsoft.Authorization/policyDefinitions', 'cstmpoldeftags')]"
+      }
+    }    
+  ],
+  "outputs": {
+    "pVNetRG": {
+      "type":  "string",
+      "value": "[parameters('rgNameA')]"
+    },
+    "sVNetRG": {
+      "type":  "string",
+      "value": "[parameters('rgNameB')]"
+    },
+    "pVNetID": {
+      "type":  "string",
+      "value": "[reference('nestDepPrimary').outputs.vnetId.value]"     
+    },
+    "sVNetID": {
+      "type":  "string",
+      "value": "[reference('nestDepSecondary').outputs.vnetId.value]"     
+    }
+  }
+}

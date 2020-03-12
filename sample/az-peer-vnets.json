@@ -1,0 +1,81 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/subscriptionDeploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "pvnetrg": {
+      "type": "string"
+    },
+    "svnetrg": {
+      "type": "string"
+    },    
+    "pvnetid": {
+      "type": "string"
+    },
+    "svnetid": {
+      "type": "string"
+    } 
+  },
+  "variables": {},
+  "resources": [
+    {
+        "name": "peerPrimary",
+        "type": "Microsoft.Resources/deployments",
+        "apiVersion": "2018-05-01",
+        "resourceGroup": "[parameters('pvnetrg')]",
+        "properties": {
+            "mode": "Incremental",
+            "template": {
+                "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                "contentVersion": "1.0.0.0",
+                "resources": [                
+                    {
+                        "name": "[concat(parameters('pvnetrg'), '-vnet/pTOs')]",
+                        "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
+                        "apiVersion": "2019-04-01",
+                        "properties": {
+                            "allowVirtualNetworkAccess": true,
+                            "allowForwardedTraffic": false,
+                            "allowGatewayTransit": false,
+                            "useRemoteGateways": false,
+                            "remoteVirtualNetwork": {
+                                "id": "[parameters('svnetid')]"
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    },
+    {
+        "name": "peerSecondary",
+        "type": "Microsoft.Resources/deployments",
+        "apiVersion": "2018-05-01",
+        "resourceGroup": "[parameters('svnetrg')]",
+        "properties": {
+            "mode": "Incremental",
+            "template": {
+                "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                "contentVersion": "1.0.0.0",
+                "resources": [                
+                    {
+                        "name": "[concat(parameters('svnetrg'), '-vnet/sTOp')]",
+                        "type": "Microsoft.Network/virtualNetworks/virtualNetworkPeerings",
+                        "apiVersion": "2019-04-01",
+                        "properties": {
+                            "allowVirtualNetworkAccess": true,
+                            "allowForwardedTraffic": false,
+                            "allowGatewayTransit": false,
+                            "useRemoteGateways": false,
+                            "remoteVirtualNetwork": {
+                                "id": "[parameters('pvnetid')]"
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    }
+  ],
+  "outputs": {
+  }
+}

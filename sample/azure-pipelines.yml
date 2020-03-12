@@ -1,0 +1,56 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- master
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+- task: AzureResourceManagerTemplateDeployment@3
+  inputs:
+    deploymentScope: 'Subscription'
+    azureResourceManagerConnection: 'Azure Subscription Connection Manager(xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)'
+    subscriptionId: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
+    location: 'Australia East'
+    templateLocation: 'Linked artifact'
+    csmFile: 'az-deploy.json'
+    csmParametersFile: 'az-deploy.parameters.json'
+    deploymentMode: 'Incremental'
+    deploymentOutputs: 'outputs'
+  continueOnError: false
+
+- task: PowerShell@2
+  inputs:
+    targetType: 'inline'
+    script: |
+      # Write your PowerShell commands here.
+      Write-Host "Marshall Output Variables"
+      $env:mapped_outputs 
+      $outputs = $env:mapped_outputs | ConvertFrom-Json
+      $outputs.pVNetID.value
+      $outputs.sVNetID.value
+      $outputs.pVNetRG.value
+      $outputs.sVNetRG.value      
+      Write-Output ("##vso[task.setvariable variable=pvnetid]{0}" -f $outputs.pVNetID.value)
+      Write-Output ("##vso[task.setvariable variable=svnetid]{0}" -f $outputs.sVNetID.value)
+      Write-Output ("##vso[task.setvariable variable=pvnetrg]{0}" -f $outputs.pVNetRG.value)
+      Write-Output ("##vso[task.setvariable variable=svnetrg]{0}" -f $outputs.sVNetRG.value)      
+  env:
+    mapped_outputs: $(outputs)
+  continueOnError: false
+
+- task: AzureResourceManagerTemplateDeployment@3
+  inputs:
+    deploymentScope: 'Subscription'
+    azureResourceManagerConnection: 'Azure Subscription Connection Manager(xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)'
+    subscriptionId: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
+    location: 'Australia East'
+    templateLocation: 'Linked artifact'
+    csmFile: 'az-peer-vnets.json'
+    overrideParameters: '-pvnetid $(pvnetid) -svnetid $(svnetid) -pvnetrg $(pvnetrg) -svnetrg $(svnetrg)'
+    deploymentMode: 'Incremental'
+  continueOnError: true
